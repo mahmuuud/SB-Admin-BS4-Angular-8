@@ -9,18 +9,22 @@ pipeline {
   stages {
     stage('Build') {
       steps {
+        checkout scm // Webhooks not recieved if removed
         sh 'npm install'
+        sh 'npm run build'
       }
     }
     stage('Test') {
       steps {
-        sh 'npm test'
-        //sh 'npx prettier --write .'
+        echo 'testing'
+        sh 'npm run test-ci || true'
+        sh 'npx prettier --write .'
       }
     }
     stage('Deliver') {
       steps {
         echo 'delivery'
+        sh 'npm run e2e'
         //sh './jenkins/scripts/deliver.sh'
         //input message: 'Finished using the web site? (Click "Proceed" to continue)'
         //sh './jenkins/scripts/kill.sh'
@@ -29,7 +33,8 @@ pipeline {
   }
   post {
     always {
-      sh 'tar czf AdminPanel-${BUILD_NUMBER}.tar.gz node_modules package.json package-lock.json'
+      echo ''
+      sh 'tar czf AdminPanel-${BUILD_NUMBER}.tar.gz dist'
 
       rtBuildInfo (
         captureEnv: true,
