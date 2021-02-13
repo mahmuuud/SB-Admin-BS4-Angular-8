@@ -9,7 +9,6 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        echo 'good check-in'
         checkout scm // Webhooks not recieved if removed
         sh 'rm -rf dist || true'
         sh 'rm buildLog-* || true'
