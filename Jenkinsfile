@@ -10,8 +10,9 @@ pipeline {
     stage('Build') {
       steps {
         checkout scm // Webhooks not recieved if removed
-        sh 'rm -rf dist'
-        sh 'rm AdminPanel-*'
+        sh 'rm -rf dist || true'
+        sh 'rm buildLog-* || true'
+        sh 'rm AdminPanel-* || true'
         sh 'npm install'
         sh 'npm run build'
       }
@@ -19,7 +20,7 @@ pipeline {
     stage('Test') {
       steps {
         echo 'testing'
-        sh 'npm run test-ci || true'
+        sh 'npm run test-ci > buildLog-${BUILD_NUMBER}.txt || true'
         sh 'npx prettier --write .'
       }
     }
@@ -35,8 +36,9 @@ pipeline {
   }
   post {
     always {
-      echo ''
-      sh 'tar czf AdminPanel-${BUILD_NUMBER}.tar.gz dist'
+      // sh 'wget -O buildLog-${BUILD_NUMBER}.log ${BUILD_URL}consoleText'
+      echo '${BUILD_URL}'
+      sh 'tar czf AdminPanel-${BUILD_NUMBER}.tar.gz dist buildLog-${BUILD_NUMBER}.txt'
 
       rtBuildInfo (
         captureEnv: true,
