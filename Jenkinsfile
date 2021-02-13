@@ -10,6 +10,8 @@ pipeline {
     stage('Build') {
       steps {
         checkout scm // Webhooks not recieved if removed
+        sh 'rm -rf dist'
+        sh 'rm AdminPanel-*'
         sh 'npm install'
         sh 'npm run build'
       }
