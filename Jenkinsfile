@@ -20,14 +20,14 @@ pipeline {
     stage('Test') {
       steps {
         echo 'testing'
-        sh 'npm run test-ci > buildLog-${BUILD_NUMBER}.txt || true'
+        sh 'npm run test-ci > UnitTestResultsBuild-${BUILD_NUMBER}.txt || true'
         sh 'npx prettier --write .'
       }
     }
     stage('Deliver') {
       steps {
         echo 'delivery'
-        sh 'npm run e2e'
+        sh 'npm run e2e > E2ETestResultsBuild-${BUILD_NUMBER}.txt'
         //sh './jenkins/scripts/deliver.sh'
         //input message: 'Finished using the web site? (Click "Proceed" to continue)'
         //sh './jenkins/scripts/kill.sh'
@@ -37,8 +37,7 @@ pipeline {
   post {
     always {
       // sh 'wget -O buildLog-${BUILD_NUMBER}.log ${BUILD_URL}consoleText'
-      echo '${BUILD_URL}'
-      sh 'tar czf AdminPanel-${BUILD_NUMBER}.tar.gz dist buildLog-${BUILD_NUMBER}.txt'
+      sh 'tar czf AdminPanel-${BUILD_NUMBER}.tar.gz dist UnitTestResultsBuild-${BUILD_NUMBER}.txt E2ETestResultsBuild-${BUILD_NUMBER}.txt'
 
       rtBuildInfo (
         captureEnv: true,
