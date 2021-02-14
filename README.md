@@ -1,65 +1,88 @@
-# SB Admin rewritten in Angular9 and Bootstrap 4
+# Angular SB Admin Pipeline ☄️
 
-Simple Dashboard Admin App built using Angular 9 and Bootstrap 4
+> SB Admin pipeline is a CI/CD pipeline built using Jenkins Open source tool to Automate Jobs from building the project till the deployment phase which could be time consuming if done manually due to frequent updates in some organizations.
 
-This project is a port of the famous Free Admin Bootstrap Theme [SB Admin v8.0](http://startbootstrap.com/template-overviews/sb-admin-2/) to Angular9 Theme.
+### Frameworks and Tools:
+> I have done my best to use as much open source technologies as possible to get the benefit of them having a wide development community and for extensibility.
 
-Powered by [StartAngular](http://startangular.com/) & [StrapUI](http://strapui.com/)
+* [Jenkins](#Jenkins)
 
-## [Demo](http://rawgit.com/start-angular/SB-Admin-BS4-Angular-6/master/dist/)
+* [Docker](#Docker)
 
-## [SB Admin Material version](https://github.com/start-javascript/sb-admin-material)
+* [Artifactory](#Artifactory)
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.2.
+* [Github](#Github)
 
-### Introduction
+#### Jenkins
+> Jenkins was used to build the whole pipeline due its great extensibility and wide support community, The Jenkinsfile for the pipeline could be found at the project's home dir.
 
-Provides fast, reliable and extensible starter for the development of Angular projects.
+* I have configured Jenkins on my Localhost and then exposed that port to the Internet using `ngrok` to be able to share Webhooks between Github and Jenkins.
 
-`sb-admin-bs4-angular9` provides the following features:
+* The pipeline was configured to be triggered with any Github Push.
 
--   Developed using boostrap-v6.0.0
--   angular-v9.0.2
--   angular/cli-v9.0.2
--   [ng-bootstrap-v6.0.0](https://github.com/ng-bootstrap/)
--   [ngx-translate-v12.1.1](https://github.com/ngx-translate)
--   Following the best practices.
--   Ahead-of-Time compilation support.
--   Official Angular i18n support.
--   Production and development builds.
--   Tree-Shaking production builds.
+* A webhook was added later to the Github Repo of my project to notify the pipeline in case of any Checkin happens.
 
-### How to start
+* I didn't use many Plugins other than the suggested on from Jenkins installation, However I needed Artifactory plugin to be able to upload The build artifacts to it (discussed later on).
 
-**Note** that this seed project requires **node >=v8.9.0 and npm >=4**.
+* The pipeline consists of 5 main stages from which 3 stages are the main CI/CD ones (Build, Test, Deliver).
 
-In order to start the project use:
+* The first stage is dedicated for SCM checkout to fetch the changes.
 
-```bash
-$ git clone https://github.com/start-angular/SB-Admin-BS4-Angular-8.git
-$ cd SB-Admin-BS4-Angular-8
-# install the project's dependencies
-$ npm install
-# watches your files and uses livereload by default run `npm start` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-$ npm start
-# prod build, will output the production application in `dist`
-# the produced code can be deployed (rsynced) to a remote server
-$ npm run build
-```
+* At the second stage which is the build stage, the pipeline uses `npm install` to install any project dependencies on the pipeline machine, and uses `npm build` to produce the current build artifacts in `/dist` directory.
 
-### Code scaffolding
+* Unit tests and code hygiene are conducted at the third stage running the command `npm test-ci` which will run the project's unit tests in non-watch mode using Karma framework for testing angular apps. And Prettier framework was used for code linting. The test results from this stage are stored in a single file named `UnitTestResultsBuild-${BUILD_NUMBER}.txt` to be uploaded later on with the artifacts to Artifactory.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive/pipe/service/class/module`.
+* The Deliver stage is basically about running E2E tests, I have developed a simple E2E test Case to be run using `Protractor` framework and the log is also stored under the name `E2ETestResultsBuild-${BUILD_NUMBER}.txt` to be uploaded as well.
 
-### Running unit tests
+* E2E needs a pre configured Selenium server to be running and the URL to that server is provided to Protractor at `protractor.conf.js` file
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+* After the E2E testing phase the website is deployed to Localhost to simulate the whole process as if the Localhost is the production server.
 
-### Running end-to-end tests
+* At this point the pipeline main flow is over, However there's one stage left for post pipeline actions which are three actions; `Always` closure which will always execute after the pipeline stages, `Success` closure which will execute its closure in case all the pipeline scripts returned an exit code of zero (Success) and `Fail` which will execute in case of failure.
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-Before running the tests make sure you are serving the app via `ng serve`.
+* Both `success` and `failure` closures use E-mail notifications to notify the pipeline in case of pipeline success or issues
 
-### Further help
+* The `Always` Closure uses the Artifactory plugin to upload the artifacts and both test logs to Artifactory.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
+##### Roll Back Scenario
+>In case of failure or any other sudden circumstances which require a rollback, Files for the previous build could be downloaded from Artifactory and deployed on the deployment machine. Or if there's a Blue/Green mechanism it could be used for rollback as well.
+
+
+#### Docker
+
+> I used Docker to solve Any Discrepancies between development and deployment environments.
+
+* A golden image was built using the `Node` official image as a base image and the  `Dockerfile` in the project's root directory to install any additional dependencies which are briefly discussed in the [Dependencies](#Dependencies) section.
+
+* A container can be used from this image to be able to run the project smoothly using `docker run -dp 4200:4200 <Image name>` command which will run the image with the port 4200 exposed (out app's PORT).
+
+* The application could be now be viewed by navigation to `Localhost:4200/` inside your favorite browser.
+
+
+#### Artifactory
+
+> Artifactory was used to store the build artifacts and test results produced by our pipeline as a tar file in a physical Repo. at `https://agilegps.jfrog.io` (could be checked in the demo videos).
+
+#### Github
+>[Github](https://github.com/mahmuuud/SB-Admin-BS4-Angular-8) was the SCM used within the whole process.
+
+
+### Installation
+
+>The recommended solution to run the project is through the docker image using the `Dockerfile` at the project's root dir. else you will have to install all the project's dependencies manually. And running `npm install` to install the package dependencies afterwards.
+
+* [NodeJs](https://nodejs.org/en/)
+
+* [Angular](https://angular.io/guide/setup-local)
+
+* [Web driver](https://selenium-python.readthedocs.io/installation.html)
+
+* [Java JRE](https://www.oracle.com/java/technologies/java-platform.html)
+
+
+## Conclusion
+
+Unfortunately this short trip of ours has came to an end but i hope you enjoyed it as much as i did! and if you already reached this part of the file i guess you did. So I wanna thank you for this and to many more adventures to come!
+
+> Demo videos attached for the pipeline in action.

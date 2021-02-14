@@ -13,6 +13,6 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 RUN ./node_modules/.bin/webdriver-manager update --versions.chrome ${chrome_version}
 RUN npm install
 RUN npm install -g webdriver-manager
-CMD ["webdriver-manager", "update"]
-CMD ["webdriver-manager", "start"]
-# CMD npm start
+#CMD ["webdriver-manager", "update"]
+#CMD ["webdriver-manager", "start"]
+CMD npm start
