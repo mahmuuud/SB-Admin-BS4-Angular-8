@@ -10,6 +10,7 @@ pipeline {
     stage('Build') {
       steps {
         checkout scm // Webhooks not recieved if removed
+        echo 'Good checkin'
         sh 'rm -rf dist || true'
         sh 'rm buildLog-* || true'
         sh 'rm AdminPanel-* || true'
