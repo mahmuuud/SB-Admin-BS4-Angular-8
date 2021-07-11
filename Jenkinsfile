@@ -1,4 +1,4 @@
-pipeline {
+xpipeline {
   agent any
   environment {
     CI = 'true'
@@ -55,6 +55,7 @@ pipeline {
               ]
         }''',
 )
+         step([$class: 'LogParserPublisher', parsingRulesPath: '/Users/mahmoudelkassry/Documents/Cloud DevOps/Challenge/ParsingRules', useProjectRule: false])
     }
 
     success {
